@@ -1,0 +1,226 @@
+{
+    "name": "Integration Gmail, Make Code",
+    "flow": [
+        {
+            "id": 1,
+            "module": "google-email:triggerWatchNewEmails",
+            "version": 4,
+            "metadata": {
+                "designer": {
+                    "x": -112,
+                    "y": -11,
+                    "messages": [
+                        {
+                            "category": "setup",
+                            "severity": "error",
+                            "message": "Connection: Value must not be empty."
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": 2,
+            "module": "code:ExecuteCode",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "language": "javascript",
+                "input": [
+                    {
+                        "name": "foo",
+                        "value": "bar"
+                    }
+                ],
+                "dependencies": [],
+                "inputFormat": "editor",
+                "codeEditorJavascript": "// Variables disponibles depuis Make via l'objet \"input\"\nconst subject = input.subject || \"\";\nconst body = input.body || \"\";\nconst text = (subject + \" \" + body).toLowerCase();\n\n// Mots-clés français\nconst frKeywords = [\n  \"cours\", \"devoir\", \"examen\", \"séance\", \"leçon\", \"fiche\",\n  \"bonjour\", \"merci\", \"voici\", \"semaine\", \"travail\", \"exercice\"\n];\n\n// Mots-clés anglais\nconst enKeywords = [\n  \"course\", \"homework\", \"exam\", \"class\", \"lesson\", \"sheet\",\n  \"hello\", \"thank\", \"here is\", \"week\", \"assignment\", \"exercise\"\n];\n\n// Comptage des occurrences\nlet frScore = 0;\nlet enScore = 0;\n\nfor (const word of frKeywords) {\n  if (text.includes(word)) frScore++;\n}\nfor (const word of enKeywords) {\n  if (text.includes(word)) enScore++;\n}\n\n// Décision\nlet langue = \"unknown\";\nif (frScore > enScore) {\n  langue = \"fr\";\n} else if (enScore > frScore) {\n  langue = \"en\";\n} else {\n  // Égalité : on regarde l'objet en priorité\n  langue = subject.match(/[àâéèêëîïôùûüç]/i) ? \"fr\" : \"en\";\n}\n\nreturn { langue };"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 188,
+                    "y": -11
+                },
+                "restore": {
+                    "expect": {
+                        "language": {
+                            "mode": "chose",
+                            "label": "JavaScript"
+                        },
+                        "input": {
+                            "items": [
+                                null
+                            ]
+                        },
+                        "inputFormat": {
+                            "label": "Code editor"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "language",
+                        "type": "select",
+                        "label": "Language",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "javascript",
+                                "python"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "input",
+                        "type": "array",
+                        "label": "Input",
+                        "spec": {
+                            "type": "collection",
+                            "label": "Variable",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "type": "text",
+                                    "required": true,
+                                    "validate": {
+                                        "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                                        "min": 1,
+                                        "max": 32
+                                    },
+                                    "label": "Name"
+                                },
+                                {
+                                    "name": "value",
+                                    "type": "any",
+                                    "label": "Value"
+                                }
+                            ],
+                            "name": "value"
+                        }
+                    },
+                    {
+                        "name": "dependencies",
+                        "type": "array",
+                        "label": "Additional dependencies (Enterprise plans only)",
+                        "spec": {
+                            "type": "text",
+                            "required": true,
+                            "label": "Dependency",
+                            "validate": {
+                                "pattern": "^[A-Za-z0-9_@\\./<>=!~\\^+-]{1,214}$",
+                                "min": 1,
+                                "max": 214
+                            },
+                            "name": "value"
+                        }
+                    },
+                    {
+                        "name": "inputFormat",
+                        "type": "select",
+                        "label": "Input format",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "editor",
+                                "string"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "codeEditorJavascript",
+                        "type": "editor",
+                        "label": "Code",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "builtin:BasicRouter",
+            "version": 1,
+            "mapper": null,
+            "metadata": {
+                "designer": {
+                    "x": 488,
+                    "y": -11
+                }
+            },
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 4,
+                            "module": "google-drive:uploadAFile",
+                            "version": 4,
+                            "filter": {
+                                "name": "{{2.langue}} = fr",
+                                "conditions": []
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 788,
+                                    "y": -161,
+                                    "messages": [
+                                        {
+                                            "category": "setup",
+                                            "severity": "error",
+                                            "message": "Connection: Value must not be empty."
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 5,
+                            "module": "google-drive:uploadAFile",
+                            "version": 4,
+                            "filter": {
+                                "name": "{{2.langue}} = en",
+                                "conditions": []
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 788,
+                                    "y": 139,
+                                    "messages": [
+                                        {
+                                            "category": "setup",
+                                            "severity": "error",
+                                            "message": "Connection: Value must not be empty."
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com",
+        "notes": []
+    }
+}
